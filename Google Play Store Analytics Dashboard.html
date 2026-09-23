@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Google Play Store Analytics Dashboard | Business Intelligence Project</title>
+<meta name="description" content="Interactive walkthrough of a Power BI project analyzing Google Play Store apps: installs, categories, ratings, reviews, pricing and sentiment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--accent:#0B8A5E;--accent-soft:#DCF2E8;--accent-d:#37C896;--accent-soft-d:#123326;--c2:#1B365D;--c3:#D6901A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c2:#8FB2E8}}
+:root[data-theme="dark"]{--c2:#8FB2E8}
+:root{
+  --ink:#0E1A2B;--paper:#F3F5F7;--panel:#FFFFFF;--line:#D6DCE4;--muted:#55627A;
+  --neg:#C4453A;--amber:#D6901A;--code-bg:#0E1A2B;--code-ink:#DCE6F5;
+  --display:"Bricolage Grotesque","Arial Narrow",Arial,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#E8EDF5;--paper:#0B1320;--panel:#131F31;--line:#25354C;--muted:#95A3BA;--neg:#F27C70;--amber:#F0B446;
+    --code-bg:#08101B;--code-ink:#D5E0F2;--accent:var(--accent-d);--accent-soft:var(--accent-soft-d);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E8EDF5;--paper:#0B1320;--panel:#131F31;--line:#25354C;--muted:#95A3BA;--neg:#F27C70;--amber:#F0B446;
+  --code-bg:#08101B;--code-ink:#D5E0F2;--accent:var(--accent-d);--accent-soft:var(--accent-soft-d);
+}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:calc(76px + env(safe-area-inset-top,0px))}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 1rem/1.6 var(--body);-webkit-font-smoothing:antialiased}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+h1,h2,h3{font-family:var(--display);line-height:1.08;margin:0;letter-spacing:-.02em}
+p{margin:0 0 1em;max-width:70ch}
+button{font:inherit;color:inherit;cursor:pointer}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:14px;height:60px}
+.brand{font:700 1rem var(--display);text-decoration:none;white-space:nowrap;color:inherit}
+.top nav{display:flex;gap:2px;overflow-x:auto;margin-left:auto}
+.top nav a{padding:8px 12px;border-radius:999px;text-decoration:none;color:var(--muted);font-size:.9rem;font-weight:500;white-space:nowrap}
+.top nav a:hover,.top nav a.on{background:var(--accent-soft);color:var(--ink)}
+.theme{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:.85rem}
+
+.hero{padding:clamp(40px,7vw,88px) 0 clamp(28px,4vw,48px)}
+.hero h1{font-size:clamp(2.3rem,6vw,4.4rem);font-weight:800;letter-spacing:-.035em;max-width:16ch}
+.hero .lede{font-size:1.15rem;color:var(--muted);margin-top:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.chip{display:inline-block;padding:4px 12px;border-radius:999px;background:var(--accent-soft);font-size:.84rem;font-weight:600}
+
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:760px){.kpis{grid-template-columns:repeat(var(--n,4),1fr)}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;border-top:4px solid var(--accent)}
+.kpi b{display:block;font:800 clamp(1.6rem,3.4vw,2.4rem)/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.kpi span{font-size:.86rem;color:var(--muted)}
+
+section.blk{padding:clamp(40px,6vw,72px) 0;border-top:1px solid var(--line)}
+section.blk>.wrap>h2{font-size:clamp(1.7rem,3.6vw,2.6rem);font-weight:800;margin-bottom:8px;padding-left:16px;border-left:5px solid var(--accent)}
+.intro{color:var(--muted);margin:0 0 26px;padding-left:21px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.card h3{font:700 1.1rem var(--display);letter-spacing:-.01em;margin-bottom:4px}
+.note{font-size:.86rem;color:var(--muted);margin:0 0 16px}
+.grid2{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:900px){.grid2{grid-template-columns:1fr 1fr}}
+.grid2>*,.split>*{min-width:0}
+
+/* tabs & segmented */
+.tablist{display:flex;gap:8px;overflow-x:auto;margin-bottom:18px;padding-bottom:2px}
+.tablist button{flex:0 0 auto;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:170px}
+.tablist button b{display:block;font-family:var(--display);font-size:1rem}
+.tablist button span{font-size:.82rem;color:var(--muted)}
+.tablist button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 -4px 0 var(--accent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:clamp(18px,3vw,30px)}
+.ctrl{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:18px}
+.ctrl label{font-size:.88rem;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:transparent;padding:7px 14px;font-size:.88rem;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+select,input[type=search]{font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink)}
+input[type=search]{min-width:min(100%,260px)}
+
+/* bars */
+.bars{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.bars li{display:grid;grid-template-columns:minmax(96px,160px) 1fr auto;gap:10px;align-items:center;font-size:.92rem;padding:2px 0;border-radius:6px}
+.bars li:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.bars .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bars .val{font-variant-numeric:tabular-nums;font-weight:600;min-width:56px;text-align:right}
+.track{display:block;height:16px;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:4px;overflow:hidden}
+.fill{display:block;height:100%;width:0;background:var(--accent);border-radius:4px;transition:width .7s cubic-bezier(.2,.7,.2,1)}
+.go .fill{width:var(--w)}
+.key{display:flex;gap:16px;font-size:.84rem;color:var(--muted);margin:0 0 12px}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+
+/* donut */
+.dwrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.dwrap svg{width:170px;height:170px;flex:0 0 auto;overflow:visible}
+.seg-c{transition:opacity .2s,stroke-width .2s;cursor:pointer}
+.seg-c.dim{opacity:.3}
+.dv{font:800 20px var(--display);fill:var(--ink)}.dl{font:500 9px var(--body);fill:var(--muted)}
+.legend{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.legend button{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 10px;text-align:left}
+.legend button:hover,.legend button.on{border-color:var(--line);background:var(--paper)}
+.legend i{width:12px;height:12px;border-radius:3px;flex:0 0 auto}
+.legend b{margin-left:auto;padding-left:16px;font-variant-numeric:tabular-nums}
+
+/* tables */
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--accent-soft);font-weight:600;white-space:nowrap}
+th[role=button]{cursor:pointer;user-select:none}
+th[data-o="a"]::after{content:" ▲";font-size:.7em}th[data-o="d"]::after{content:" ▼";font-size:.7em}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* details */
+details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+summary{padding:15px 18px;cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:16px}
+summary::after{content:"+";font:600 1.3rem/1 var(--display);color:var(--accent)}
+details[open] summary::after{content:"–"}
+details>div{padding:0 18px 16px;color:var(--muted)}
+details>div b{color:var(--ink)}
+
+/* checklist */
+.check{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.check label{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);cursor:pointer}
+.check input{margin-top:.3em;width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+.check input:checked+span{color:var(--muted);text-decoration:line-through}
+.prog{display:flex;align-items:center;gap:12px;margin-bottom:14px;font-size:.9rem;color:var(--muted)}
+.prog .bar{flex:1;height:8px;background:color-mix(in srgb,var(--ink) 10%,transparent);border-radius:99px;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+
+/* code */
+.codebox{position:relative}
+.code{background:var(--code-bg);color:var(--code-ink);padding:20px;border-radius:12px;overflow-x:auto;font:.85rem/1.65 var(--mono);margin:0;white-space:pre}
+.code .k{color:#7FB2FF;font-weight:600}.code .s{color:#F3C56B}.code .c{color:#7C8CA6}
+.copy{position:absolute;top:10px;right:10px;background:#ffffff1f;color:#fff;border:1px solid #ffffff40;border-radius:8px;padding:4px 10px;font-size:.8rem}
+.copy:hover{background:#ffffff38}
+
+/* split explorer */
+.split{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:900px){.split{grid-template-columns:300px 1fr}}
+.steps{display:flex;flex-direction:column;gap:6px}
+.steps button{display:flex;gap:12px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.steps button i{font:700 .85rem var(--display);font-style:normal;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;flex:0 0 auto}
+.steps button[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.steps button[aria-selected="true"] i{background:var(--accent);color:#fff}
+.nav2{display:flex;justify-content:space-between;margin-top:16px}
+.btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:10px;padding:10px 18px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn[disabled]{opacity:.4;cursor:default}
+
+/* bubbles */
+.bubbles{display:flex;flex-wrap:wrap;align-items:center;gap:14px;min-height:240px}
+.bub{border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#fff;font-weight:700;font-size:.72rem;line-height:1.25;border:0;padding:4px;overflow:hidden;transition:transform .2s}
+.bub:hover,.bub:focus-visible{transform:scale(1.06)}
+.bub small{display:block;font-weight:500;opacity:.9}
+
+.stat2{display:flex;gap:30px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.stat2 b{display:block;font:800 1.7rem/1 var(--display);font-variant-numeric:tabular-nums}
+.stat2 span{font-size:.84rem;color:var(--muted)}
+.callout{border-left:4px solid var(--amber);background:color-mix(in srgb,var(--amber) 12%,var(--panel));padding:12px 16px;border-radius:0 10px 10px 0;font-size:.92rem;margin:16px 0 0;max-width:78ch}
+.finds{list-style:none;padding:0;margin:0;max-width:80ch}
+.finds li{padding:16px 0 16px 20px;border-bottom:1px solid var(--line);border-left:3px solid var(--accent);margin-bottom:10px;background:var(--panel);border-radius:0 10px 10px 0;padding-right:16px;border-bottom:0}
+.finds b{font-family:var(--display);display:block}
+.finds span{color:var(--muted)}
+.tip{position:fixed;z-index:99;background:var(--ink);color:var(--paper);padding:6px 10px;border-radius:8px;font-size:.82rem;pointer-events:none;max-width:280px}
+footer{padding:28px 0 44px;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.fill,.seg-c,.bub,.prog .bar i{transition:none}}
+
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="#top">Play Store Analytics</a>
+  <nav aria-label="Sections">
+    <a href="#explore">Dashboard</a><a href="#questions">Questions</a><a href="#build">Build</a><a href="#quality">Quality</a><a href="#ideas">Next</a>
+  </nav>
+  <button class="theme" id="themeBtn" type="button">Theme</button>
+</div></header>
+
+<main id="top">
+<section class="hero"><div class="wrap">
+  <h1>Google Play Store Analytics Dashboard</h1>
+  <p class="lede">A Power BI project that turns app-store data into business views: how many apps exist, which ones get installed, where reviews come from, how free and paid apps differ, and what tone reviews take.</p>
+  <div class="chips"><span class="chip">Business intelligence</span><span class="chip">Power BI</span><span class="chip">4 report pages</span><span class="chip">Installs · Ratings · Reviews · Pricing · Sentiment</span></div>
+  <div class="kpis" style="--n:5;margin-top:34px">
+    <div class="kpi"><b>9K</b><span>total apps</span></div>
+    <div class="kpi"><b>65bn</b><span>total installs</span></div>
+    <div class="kpi"><b>37K</b><span>total reviews</span></div>
+    <div class="kpi"><b>8,421</b><span>free apps</span></div>
+    <div class="kpi"><b>724</b><span>paid apps</span></div>
+  </div>
+</div></section>
+
+<section class="blk" id="explore"><div class="wrap">
+  <h2>Explore the four dashboard pages</h2>
+  <p class="intro">Each tab rebuilds one report page from the figures in the project report. Hover charts for details.</p>
+  <div id="pages">
+    <div class="tablist" role="tablist" aria-label="Dashboard pages">
+      <button role="tab"><b>1. Executive overview</b><span>KPIs and category size</span></button>
+      <button role="tab"><b>2. App performance</b><span>Top apps, bubbles</span></button>
+      <button role="tab"><b>3. Pricing and category</b><span>Free versus paid</span></button>
+      <button role="tab"><b>4. Reviews and sentiment</b><span>Category detail, tone</span></button>
+    </div>
+
+    <div class="panel" role="tabpanel">
+      <h3 style="font-size:1.5rem;margin-bottom:8px">Executive overview</h3>
+      <p>The first page is the market snapshot for a business user.</p>
+      <div class="kpis" style="--n:4;margin-bottom:22px">
+        <div class="kpi"><b>9K</b><span>Total apps</span></div>
+        <div class="kpi"><b>9K</b><span>Rated apps count</span></div>
+        <div class="kpi"><b>65bn</b><span>Total installs</span></div>
+        <div class="kpi"><b>37K</b><span>Total reviews</span></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3>What is on this page</h3><ul class="check" style="margin-top:10px">
+          <li><label style="cursor:default"><span>KPI cards for total apps, rated apps, total installs and total reviews</span></label></li>
+          <li><label style="cursor:default"><span>Category-wise app count</span></label></li>
+          <li><label style="cursor:default"><span>Category distribution by year</span></label></li>
+          <li><label style="cursor:default"><span>Category-level install counts</span></label></li>
+        </ul></div>
+        <div class="card"><h3>Reading it</h3><p style="margin-top:8px">Family has the largest app count in the displayed category ranking, followed by Game and other categories.</p><p class="note" style="margin:0">Figures shown are about 9K apps, about 65bn installs and about 37K reviews.</p></div>
+      </div>
+    </div>
+
+    <div class="panel" role="tabpanel" hidden>
+      <h3 style="font-size:1.5rem;margin-bottom:8px">App performance and relationships</h3>
+      <div class="grid2">
+        <div class="card">
+          <h3>Apps by installs</h3>
+          <div class="ctrl">
+            <label>Show <select id="topN"><option value="3">Top 3</option><option value="5">Top 5</option><option value="10" selected>Top 10</option></select></label>
+            <div class="seg" id="sortSeg"><button aria-pressed="true" data-v="desc">Highest first</button><button aria-pressed="false" data-v="asc">Lowest first</button></div>
+          </div>
+          <ul class="bars" id="appBars"></ul>
+          <p class="note" style="margin-top:14px">Installs in billions. The report notes that install activity is concentrated in a small number of apps.</p>
+        </div>
+        <div class="card">
+          <h3>Category-wise rating and reviews</h3>
+          <p class="note">Bubble area follows reviews in billions; the smallest bubbles are enlarged so labels fit.</p>
+          <div class="bubbles" id="bubbles"></div>
+        </div>
+      </div>
+      <div class="callout">The page also has a bubble-style view relating rating count to review volume by category, which helps show whether popularity is concentrated.</div>
+    </div>
+
+    <div class="panel" role="tabpanel" hidden>
+      <h3 style="font-size:1.5rem;margin-bottom:8px">Pricing and category analysis</h3>
+      <div class="kpis" style="--n:3;margin-bottom:22px">
+        <div class="kpi"><b>8,421</b><span>Free apps</span></div>
+        <div class="kpi"><b>724</b><span>Paid apps</span></div>
+        <div class="kpi"><b>65bn</b><span>Total installs</span></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h3>Free versus paid</h3><p class="note">Share of apps by type</p><div id="priceDonut"></div></div>
+        <div class="card"><h3>Type-wise reviews</h3><p class="note">Review volume in millions</p><ul class="bars" id="typeBars"></ul>
+          <p class="callout">Free apps hold the overwhelming majority of reviews. The original chart uses a log scale, so bar lengths here are also log-scaled to stay readable.</p></div>
+      </div>
+      <div class="card" style="margin-top:18px"><h3>Category-wise app counts</h3><p class="note">Categories shown on this page, in thousands of apps</p><ul class="bars" id="catApps"></ul></div>
+    </div>
+
+    <div class="panel" role="tabpanel" hidden>
+      <h3 style="font-size:1.5rem;margin-bottom:8px">Reviews and sentiment</h3>
+      <div class="grid2">
+        <div class="card"><h3>Category-wise reviews</h3><p class="note">Sum of reviews, in millions</p><ul class="bars" id="catRev"></ul></div>
+        <div class="card"><h3>Sentiment-wise reviews</h3><p class="note">Hover a slice or pick from the legend</p><div id="sentDonut"></div></div>
+      </div>
+      <div class="card" style="margin-top:18px">
+        <h3>Category detail table</h3>
+        <p class="note">Search or click a column to sort. Blank installs mean no value was shown in the report.</p>
+        <div class="ctrl"><input type="search" id="catSearch" placeholder="Search categories" aria-label="Search categories"><span class="note" id="catCount" style="margin:0">13 shown</span></div>
+        <div class="scroll"><table id="catTable">
+          <thead><tr><th>Category</th><th>Count of app</th><th>Total installs</th><th>Negative reviews</th><th>Positive reviews</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <p class="callout">Every row shows the same 19 apps, 576 negative and 812 positive reviews, and the total row repeats them. That points to a filter or relationship issue in the model, so the table is best used for layout only until it is fixed.</p>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section class="blk" id="questions"><div class="wrap">
+  <h2>Business questions and what answers them</h2>
+  <p class="intro">Open a question to see the evidence and the reading from the dashboard.</p>
+  <div id="qa"></div>
+  <h3 style="margin:36px 0 14px;font-size:1.4rem">Key observations</h3>
+  <ul class="finds">
+    <li><b>A large ecosystem.</b><span>The main KPI cards show approximately 9K total apps.</span></li>
+    <li><b>Installs are highly concentrated.</b><span>Subway Surfers, Google News, Candy Crush Saga, Temple Run 2 and a few others carry very large install totals.</span></li>
+    <li><b>Family leads on app count; Game leads on reviews.</b><span>Family and Tools also show substantial review volume.</span></li>
+    <li><b>Free dominates.</b><span>Free apps are the overwhelming majority of inventory, with a very large gap in review volume versus paid apps.</span></li>
+    <li><b>Tone sits next to volume.</b><span>Sentiment is split into positive, negative and neutral so feedback tone can be read with review counts.</span></li>
+  </ul>
+</div></section>
+
+<section class="blk" id="build"><div class="wrap">
+  <h2>How it was built</h2>
+  <p class="intro">Scope, objectives, implementation steps and the measures behind the KPIs.</p>
+
+  <div class="grid2">
+    <div>
+      <h3 style="margin-bottom:12px;font-size:1.3rem">Project objectives</h3>
+      <ul class="check" id="objs" style="margin-bottom:0"></ul>
+    </div>
+    <div>
+      <h3 style="margin-bottom:12px;font-size:1.3rem">Dataset and scope</h3>
+      <div class="ctrl"><input type="search" id="scopeSearch" placeholder="Filter rows" aria-label="Filter scope rows"></div>
+      <div class="scroll"><table id="scopeTable">
+        <thead><tr><th>Area</th><th>Dashboard measure</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>App inventory</td><td>Total apps / rated apps</td><td>Measure application coverage</td></tr>
+          <tr><td>Popularity</td><td>Total installs</td><td>Measure adoption</td></tr>
+          <tr><td>Engagement</td><td>Reviews / ratings</td><td>Measure user interaction</td></tr>
+          <tr><td>Category</td><td>App count / installs / reviews</td><td>Compare app segments</td></tr>
+          <tr><td>Commercial model</td><td>Free vs paid</td><td>Compare pricing types</td></tr>
+          <tr><td>Sentiment</td><td>Positive / negative / neutral</td><td>Summarize review tone</td></tr>
+        </tbody>
+      </table></div>
+      <p class="callout">The exact source-file row count, cleaning rules, sentiment model and data-refresh date are not visible in the report and should be added if the original documentation is available.</p>
+    </div>
+  </div>
+
+  <h3 style="margin:44px 0 14px;font-size:1.3rem">Implementation steps</h3>
+  <div id="impl">
+    <div class="tablist" role="tablist" aria-label="Implementation steps">
+      <button role="tab"><b>Data preparation</b><span>Clean fields</span></button>
+      <button role="tab"><b>Data modeling</b><span>Analytical table</span></button>
+      <button role="tab"><b>Measures</b><span>KPIs</span></button>
+      <button role="tab"><b>Visualization</b><span>Visual types</span></button>
+      <button role="tab"><b>Interactivity</b><span>Filtering</span></button>
+      <button role="tab"><b>Presentation</b><span>Consistency</span></button>
+    </div>
+    <div class="panel" role="tabpanel"><p>Standardize category, app, pricing, install, rating and review fields. Handle missing values and inconsistent formats.</p></div>
+    <div class="panel" role="tabpanel" hidden><p>Create a clean analytical table, or a star-schema model where appropriate.</p></div>
+    <div class="panel" role="tabpanel" hidden><p>Build KPIs for app count, installs, ratings, reviews and category or type comparisons. See the measures below.</p></div>
+    <div class="panel" role="tabpanel" hidden><p>Use KPI cards, bar charts, donut charts, bubble or scatter visuals, and matrix or table views.</p></div>
+    <div class="panel" role="tabpanel" hidden><p>Use slicers, cross-filtering, drill-through or page navigation where supported.</p></div>
+    <div class="panel" role="tabpanel" hidden><p>Keep titles, units, number formatting and category labels consistent.</p></div>
+  </div>
+
+  <h3 style="margin:44px 0 6px;font-size:1.3rem">Core DAX measures</h3>
+  <p class="note">Pick a measure to see its formula. These are based on the fields used in the dashboard.</p>
+  <div class="split">
+    <div class="steps" id="daxList"></div>
+    <div class="card">
+      <h3 id="daxName"></h3>
+      <p class="note" id="daxDesc"></p>
+      <div class="codebox"><pre class="code" id="daxCode"></pre><button class="copy" id="daxCopy" type="button">Copy</button></div>
+      <div class="ctrl" style="margin:16px 0 0"><button class="btn ghost" id="daxAll" type="button">Show all measures</button></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="blk" id="quality"><div class="wrap">
+  <h2>Data quality and validation</h2>
+  <p class="intro">Tick each check as you complete it. Progress is remembered in your browser when storage is available.</p>
+  <div class="prog"><div class="bar"><i id="qBar"></i></div><span id="qLabel"></span></div>
+  <ul class="check" id="qList"></ul>
+</div></section>
+
+<section class="blk" id="ideas"><div class="wrap">
+  <h2>Enhancement opportunities</h2>
+  <p class="intro">Ideas for extending the dashboard. Open any item for the detail.</p>
+  <div id="enh"></div>
+  <h3 style="margin:36px 0 14px;font-size:1.4rem">Conclusion</h3>
+  <p>The dashboard combines executive KPIs with category, application, pricing, review and sentiment analysis. It shows how raw app-store data becomes an interactive business intelligence product that supports market segmentation, popularity analysis, engagement analysis and review interpretation.</p>
+  <p>For a portfolio or academic submission, the project can be strengthened by documenting the source dataset, cleaning workflow, data model, DAX measures, sentiment methodology and validation checks.</p>
+
+  <h3 style="margin:36px 0 14px;font-size:1.4rem">Appendix: dashboard-to-insight mapping</h3>
+  <div class="ctrl"><input type="search" id="mapSearch" placeholder="Search visuals" aria-label="Search visuals"></div>
+  <div class="scroll"><table id="mapTable">
+    <thead><tr><th>Dashboard visual</th><th>Primary metric</th><th>Analytical use</th></tr></thead>
+    <tbody>
+      <tr><td>KPI cards</td><td>Apps / installs / reviews</td><td>Executive snapshot</td></tr>
+      <tr><td>Category-wise apps</td><td>Count of apps</td><td>Category size</td></tr>
+      <tr><td>Apps wise installs</td><td>Sum of installs</td><td>Application popularity</td></tr>
+      <tr><td>Category-wise rating and reviews</td><td>Ratings / reviews</td><td>Category engagement</td></tr>
+      <tr><td>Free vs paid</td><td>App count</td><td>Pricing mix</td></tr>
+      <tr><td>Type-wise reviews</td><td>Review volume</td><td>Engagement by pricing type</td></tr>
+      <tr><td>Category-wise reviews</td><td>Review volume</td><td>Category engagement</td></tr>
+      <tr><td>Sentiment-wise reviews</td><td>Sentiment count</td><td>Review tone</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+</main>
+<footer><div class="wrap">Based on the Google Play Store Analytics Dashboard project report. Figures are as displayed in the report.</div></footer>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const fmt=n=>n.toLocaleString('en-US');
+
+/* tooltip */
+const tip=document.createElement('div');tip.className='tip';tip.hidden=true;document.body.appendChild(tip);
+document.addEventListener('pointermove',e=>{
+  const t=e.target.closest&&e.target.closest('[data-tip]');
+  if(!t){tip.hidden=true;return}
+  tip.textContent=t.dataset.tip;tip.hidden=false;
+  tip.style.left=Math.max(8,Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8))+'px';
+  tip.style.top=(e.clientY+18)+'px';
+});
+document.addEventListener('focusin',e=>{
+  const t=e.target.closest&&e.target.closest('[data-tip]');
+  if(t){const r=t.getBoundingClientRect();tip.textContent=t.dataset.tip;tip.hidden=false;tip.style.left=Math.max(8,r.left)+'px';tip.style.top=(r.bottom+6)+'px'}
+});
+document.addEventListener('focusout',()=>{tip.hidden=true});
+
+/* tabs (role=tab / role=tabpanel inside root) */
+function tabs(root,onchange){
+  const bt=$$('[role=tab]',root),ps=$$('[role=tabpanel]',root);
+  function sel(i,focus){
+    bt.forEach((b,j)=>{b.setAttribute('aria-selected',i===j);b.tabIndex=i===j?0:-1});
+    ps.forEach((p,j)=>{p.hidden=i!==j});
+    if(focus)bt[i].focus();
+    if(onchange)onchange(i);
+  }
+  bt.forEach((b,i)=>{
+    b.onclick=()=>sel(i);
+    b.onkeydown=e=>{
+      const k=e.key,n=bt.length;
+      if(k==='ArrowRight'||k==='ArrowDown'){e.preventDefault();sel((i+1)%n,1)}
+      else if(k==='ArrowLeft'||k==='ArrowUp'){e.preventDefault();sel((i-1+n)%n,1)}
+    };
+  });
+  sel(0);
+  return sel;
+}
+
+/* segmented toggle group: buttons with data-v */
+function seg(root,cb){
+  const bs=$$('button',root);
+  bs.forEach(b=>b.onclick=()=>{bs.forEach(o=>o.setAttribute('aria-pressed',o===b));cb(b.dataset.v)});
+  const first=bs.find(b=>b.getAttribute('aria-pressed')==='true')||bs[0];
+  first.setAttribute('aria-pressed',true);cb(first.dataset.v);
+}
+
+/* bars: rows = [{l,v,t,c?,tip?}] */
+function bars(node,rows,max){
+  max=max||Math.max(...rows.map(r=>r.v));
+  node.classList.remove('go');
+  node.innerHTML=rows.map(r=>`<li data-tip="${(r.tip||r.l+': '+r.t).replace(/"/g,'&quot;')}"><span class="lbl">${r.l}</span><span class="track"><i class="fill" style="--w:${(r.v/max*100).toFixed(1)}%;${r.c?'background:'+r.c:''}"></i></span><span class="val">${r.t}</span></li>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>node.classList.add('go')));
+}
+
+/* donut: parts = [{l,p,t,c}] */
+function donut(node,parts,label){
+  const R=54,C=2*Math.PI*R;let off=0;
+  const segs=parts.map((p,i)=>{
+    const len=p.p/100*C;
+    const s=`<circle class="seg-c" data-i="${i}" cx="70" cy="70" r="${R}" fill="none" stroke-width="22" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)" style="stroke:${p.c}" tabindex="0" data-tip="${p.l}: ${p.t}"/>`;
+    off+=len;return s;
+  }).join('');
+  node.innerHTML=`<div class="dwrap"><svg viewBox="0 0 140 140" role="img" aria-label="${label}">${segs}<text x="70" y="70" text-anchor="middle" class="dv"></text><text x="70" y="86" text-anchor="middle" class="dl"></text></svg><ul class="legend">${parts.map((p,i)=>`<li><button data-i="${i}"><i style="background:${p.c}"></i>${p.l}<b>${p.t.split(' · ').pop()}</b></button></li>`).join('')}</ul></div>`;
+  const dv=$('.dv',node),dl=$('.dl',node),cs=$$('.seg-c',node),bs=$$('.legend button',node);
+  function show(i){
+    cs.forEach((c,j)=>c.classList.toggle('dim',j!==i));
+    bs.forEach((b,j)=>b.classList.toggle('on',j===i));
+    dv.textContent=parts[i].p.toFixed(parts[i].p%1?2:0).replace(/\.?0+$/,'')+'%';dl.textContent=parts[i].l;
+  }
+  [...cs,...bs].forEach(el=>{const i=+el.dataset.i;el.addEventListener('pointerenter',()=>show(i));el.addEventListener('focus',()=>show(i));el.addEventListener('click',()=>show(i))});
+  show(0);
+}
+
+/* sortable + searchable tables */
+function sortable(table){
+  $$('th',table).forEach((th,i)=>{
+    th.tabIndex=0;th.setAttribute('role','button');
+    const go=()=>{
+      const tb=table.tBodies[0],rows=[...tb.rows],asc=th.dataset.o!=='a';
+      $$('th',table).forEach(h=>delete h.dataset.o);th.dataset.o=asc?'a':'d';
+      rows.sort((a,b)=>{
+        const x=a.cells[i].dataset.v??a.cells[i].textContent.trim(),y=b.cells[i].dataset.v??b.cells[i].textContent.trim();
+        const nx=parseFloat(x),ny=parseFloat(y);
+        const c=(!isNaN(nx)&&!isNaN(ny))?nx-ny:String(x).localeCompare(String(y));
+        return asc?c:-c;
+      });
+      rows.forEach(r=>tb.appendChild(r));
+    };
+    th.onclick=go;th.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+  });
+}
+function searchTable(input,table,countEl){
+  input.oninput=()=>{
+    const q=input.value.toLowerCase().trim();let n=0;
+    [...table.tBodies[0].rows].forEach(r=>{const ok=r.textContent.toLowerCase().includes(q);r.hidden=!ok;if(ok)n++});
+    if(countEl)countEl.textContent=n+' shown';
+  };
+}
+
+/* copy */
+function copyBtn(btn,get){
+  btn.onclick=async()=>{
+    try{await navigator.clipboard.writeText(get());btn.textContent='Copied'}catch(e){btn.textContent='Select and copy'}
+    setTimeout(()=>{btn.textContent='Copy'},1600);
+  };
+}
+
+/* checklist with progress */
+function checklist(ul,bar,label,key){
+  const boxes=$$('input',ul);let saved=[];
+  try{saved=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}
+  boxes.forEach((b,i)=>{b.checked=saved.includes(i)});
+  function upd(){
+    const done=boxes.filter(b=>b.checked).length;
+    bar.style.width=(done/boxes.length*100)+'%';label.textContent=done+' of '+boxes.length+' checked';
+    try{localStorage.setItem(key,JSON.stringify(boxes.map((b,i)=>b.checked?i:-1).filter(i=>i>=0)))}catch(e){}
+  }
+  boxes.forEach(b=>b.onchange=upd);upd();
+}
+
+/* highlight code */
+function hl(code){
+  const esc=code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return esc.replace(/(--[^\n]*)/g,'<span class="c">$1</span>')
+    .replace(/('[^']*')/g,'<span class="s">$1</span>')
+    .replace(/\b(SELECT|FROM|WHERE|UPDATE|SET|GROUP BY|HAVING|SUM|CASE|WHEN|THEN|ELSE|END|AS|IS NULL|NULL|OR|COUNT|USE|AND|DISTINCTCOUNT|AVERAGE|CALCULATE)\b/g,'<span class="k">$1</span>');
+}
+
+/* theme + scroll spy */
+(function(){
+  const b=$('#themeBtn');
+  if(b)b.onclick=()=>{
+    const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+    r.dataset.theme=dark?'light':'dark';b.textContent=dark?'Dark mode':'Light mode';
+  };
+  const links=$$('.top nav a'),secs=links.map(a=>$(a.getAttribute('href')));
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle('on',l.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-30% 0px -60% 0px'});
+    secs.forEach(s=>s&&io.observe(s));
+  }
+})();
+
+
+/* ---- data from the report ---- */
+const G='var(--accent)',B='var(--c2)',A='var(--c3)',N='var(--neg)';
+
+tabs($('#pages'));
+tabs($('#impl'));
+
+// Page 2: top apps
+const apps=[["Subway Surfers",6.0],["Google News",4.0],["Candy Crush Saga",3.5],["Temple Run 2",3.0],["imo free video…",2.0],["Pou",2.0],["Dropbox",1.5],["UC Browser",1.5],["SHAREit",1.0],["ROBLOX",0.9]];
+let sortDir='desc';
+function drawApps(){
+  const n=+$('#topN').value;let rows=apps.slice(0,n);
+  if(sortDir==='asc')rows=rows.slice().reverse();
+  bars($('#appBars'),rows.map(([l,v])=>({l,v,t:v.toFixed(1)+'bn',tip:l+': '+v.toFixed(1)+' billion installs'})),6);
+}
+$('#topN').onchange=drawApps;seg($('#sortSeg'),v=>{sortDir=v;drawApps()});
+
+// bubbles
+const bubs=[["GAME",1.25,"var(--accent)"],["FAMILY",0.29,"#E0703A"],["TOOLS",0.11,"#C43C9A"],["PHOTOGRAPHY",0.08,"#7A4FC4"]];
+$('#bubbles').innerHTML=bubs.map(([l,v,c])=>{const d=Math.round(Math.sqrt(v)*150);return `<button class="bub" type="button" style="width:${Math.max(d,98)}px;height:${Math.max(d,98)}px;background:${c}" data-tip="${l}: ${v}bn reviews">${l}<small>${v}bn</small></button>`}).join('');
+
+// Page 3
+donut($('#priceDonut'),[{l:'Free apps',p:92.08,t:'8K · 92.08%',c:G},{l:'Paid apps',p:7.92,t:'1K · 7.92%',c:A}],'Free versus paid apps');
+bars($('#typeBars'),[{l:'Free',v:Math.log10(2273e6),t:'2,273M',tip:'Free: 2,273M reviews',c:G},{l:'Paid',v:Math.log10(4e6),t:'4M',tip:'Paid: 4M reviews',c:A}],Math.log10(2273e6)*1.0);
+const catApps=[["EDUCATION",.11],["MAPS_AND_NAVIGATION",.11],["ENTERTAINMENT",.09],["LIBRARIES_AND_DEMO",.08],["AUTO_AND_VEHICLES",.08],["HOUSE_AND_HOME",.07],["EVENTS",.06],["WEATHER",.06],["PARENTING",.05],["BEAUTY",.05]];
+bars($('#catApps'),catApps.map(([l,v])=>({l:l.replace(/_/g,' ').toLowerCase().replace(/^./,c=>c.toUpperCase()),v,t:v.toFixed(2)+'K'})),.11);
+
+// Page 4
+bars($('#catRev'),[{l:'Game',v:1350,t:'1,350M'},{l:'Family',v:291,t:'291M'},{l:'Tools',v:105,t:'105M'},{l:'Business',v:6,t:'6M'},{l:'Medical',v:1,t:'1M'}]);
+donut($('#sentDonut'),[{l:'Positive',p:64.11,t:'24K · 64.11%',c:G},{l:'Negative',p:22.1,t:'8K · 22.1%',c:N},{l:'Neutral',p:13.79,t:'5K · 13.79%',c:A}],'Review sentiment split');
+const cats=["ART_AND_DESIGN","AUTO_AND_VEHICLES","BEAUTY","BOOKS_AND_REFERENCE","BUSINESS","COMICS","COMMUNICATION","DATING","EDUCATION","ENTERTAINMENT","EVENTS","FAMILY","FINANCE"];
+const inst={COMMUNICATION:3500000000,FAMILY:1700000000};
+$('#catTable tbody').innerHTML=cats.map(c=>`<tr><td>${c}</td><td class="num">19</td><td class="num" data-v="${inst[c]||0}">${inst[c]?fmt(inst[c]):''}</td><td class="num">576</td><td class="num">812</td></tr>`).join('')+`<tr><td><b>Total</b></td><td class="num">19</td><td class="num" data-v="30200000000">30,200,000,000</td><td class="num">576</td><td class="num">812</td></tr>`;
+sortable($('#catTable'));searchTable($('#catSearch'),$('#catTable'),$('#catCount'));
+
+// Q&A
+const qa=[
+ ["Which categories contain the most applications?","Category-wise app count ranking.","Family has the largest app count in the displayed ranking, followed by Game and other categories."],
+ ["Which applications have the highest install volumes?","Top apps by installs chart.","Subway Surfers, Google News, Candy Crush Saga and Temple Run 2 lead, with very large install totals."],
+ ["Which categories generate high review activity?","Category-wise review analysis.","Game is dominant, with Family and Tools also showing substantial review volumes."],
+ ["How do free and paid apps differ?","Free vs paid and type-wise reviews visuals.","Free apps are the overwhelming majority of the inventory, and the review volume gap between free and paid is very large."],
+ ["Is app popularity concentrated among a few applications?","Top-install chart and the rating/review relationship view.","Install activity is highly concentrated in a relatively small number of apps."],
+ ["What is the distribution of review sentiment?","Sentiment-wise reviews donut chart.","Reviews are split into positive, negative and neutral groups, so tone can be read alongside volume."]
+];
+$('#qa').innerHTML=qa.map(([q,e,a])=>`<details><summary>${q}</summary><div><p style="margin:0 0 6px"><b>Evidence:</b> ${e}</p><p style="margin:0"><b>Reading:</b> ${a}</p></div></details>`).join('');
+
+// objectives
+const objs=["Understand the overall distribution of applications across categories.","Measure app popularity using installs and review activity.","Compare category-level performance using app count, installs, ratings and reviews.","Identify highly installed applications and their contribution to overall performance.","Compare free and paid applications.","Analyze review volume and sentiment patterns across categories.","Create an interactive dashboard that supports filtering and visual exploration.","Translate raw app data into concise KPIs and business insights."];
+$('#objs').innerHTML=objs.map(o=>`<li><label style="cursor:default"><span>${o}</span></label></li>`).join('');
+searchTable($('#scopeSearch'),$('#scopeTable'));sortable($('#scopeTable'));
+searchTable($('#mapSearch'),$('#mapTable'));sortable($('#mapTable'));
+
+// DAX
+const dax=[
+ ["Total Apps","DISTINCTCOUNT(App[App])","Counts distinct apps."],
+ ["Total Reviews","SUM(App[Reviews])","Adds up all review counts."],
+ ["Total Installs","SUM(App[Installs])","Adds up all installs."],
+ ["Average Rating","AVERAGE(App[Rating])","Average of the rating field."],
+ ["Free Apps",'CALCULATE([Total Apps], App[Type] = "Free")',"Total apps where type is Free."],
+ ["Paid Apps",'CALCULATE([Total Apps], App[Type] = "Paid")',"Total apps where type is Paid."],
+ ["Positive Reviews",'CALCULATE([Total Reviews], App[Sentiment] = "Positive")',"Total reviews with positive sentiment."],
+ ["Negative Reviews",'CALCULATE([Total Reviews], App[Sentiment] = "Negative")',"Total reviews with negative sentiment."],
+ ["Neutral Reviews",'CALCULATE([Total Reviews], App[Sentiment] = "Neutral")',"Total reviews with neutral sentiment."]
+];
+let daxSel=0,daxAllMode=false;
+$('#daxList').innerHTML=dax.map((d,i)=>`<button type="button" role="tab" aria-selected="${i===0}" data-i="${i}"><i>${i+1}</i>${d[0]}</button>`).join('');
+function drawDax(){
+  $$('#daxList button').forEach((b,i)=>b.setAttribute('aria-selected',!daxAllMode&&i===daxSel));
+  const list=daxAllMode?dax:[dax[daxSel]];
+  $('#daxName').textContent=daxAllMode?'All core measures':dax[daxSel][0];
+  $('#daxDesc').textContent=daxAllMode?'The nine measures used across the dashboard.':dax[daxSel][2];
+  $('#daxCode').innerHTML=hl(list.map(d=>d[0]+' = '+d[1]).join('\n')).replace(/&quot;/g,'"');
+  $('#daxAll').textContent=daxAllMode?'Show one measure':'Show all measures';
+}
+$$('#daxList button').forEach(b=>b.onclick=()=>{daxSel=+b.dataset.i;daxAllMode=false;drawDax()});
+$('#daxAll').onclick=()=>{daxAllMode=!daxAllMode;drawDax()};
+copyBtn($('#daxCopy'),()=>$('#daxCode').textContent);drawDax();
+
+// quality checklist
+const qc=["Standardize install values before aggregation, for example convert text such as '1,000,000+' into a number.","Validate whether review counts and install counts are stored as numbers or formatted text.","Check duplicate app names and decide whether they are different versions or data duplication.","Handle missing ratings explicitly, and separate 'no rating' from a numerical zero.","Validate category labels and merge duplicates caused by spelling or formatting differences.","Document the method used to derive Positive, Negative and Neutral sentiment.","Reconcile KPI totals against source data after every major cleaning step."];
+$('#qList').innerHTML=qc.map(q=>`<li><label><input type="checkbox"><span>${q}</span></label></li>`).join('');
+checklist($('#qList'),$('#qBar'),$('#qLabel'),'play-quality');
+
+// enhancements
+const enh=[
+ ["Add slicers","Category, Type, Content Rating, Android Version and Last Updated date, if those fields exist in the source data."],
+ ["Add a time-series view","Installs, ratings or reviews over time, if historical or date fields support meaningful trends."],
+ ["Add tooltip pages","App-level details such as rating, reviews, installs, price and category."],
+ ["Use dynamic titles","Titles that show which filters are active."],
+ ["Add a Top-N selector","Switch between Top 5, Top 10, Top 20 and so on."],
+ ["Add an install-to-review ratio","Compare adoption with visible user feedback."],
+ ["Improve accessibility","Increase label readability, reduce background decoration and keep chart scales consistent."]
+];
+$('#enh').innerHTML=enh.map(([t,d])=>`<details><summary>${t}</summary><div>${d}</div></details>`).join('');
+</script>
+</body>
+</html>
