@@ -26,12 +26,19 @@ Created a summary presentation using Gamma
 
 Dashboard:
 Page 1 — Executive Overview: KPI cards (Total Apps, Rated Apps, Total Installs, Total Reviews), category-wise app count, category distribution by year
-
-
+![Executive Overview](./dashboard_executive_overview.png)
 
 Page 2 — App Performance: Top apps by installs, category-level rating/review comparison, rating-vs-review relationship view
+![Monetization Analysis](./dashboard_monetization_overview.png)
+
 Page 3 — Pricing & Category: Free vs. paid app distribution, category-wise app counts, review volume by app type
+![Quality vs Popularity](./dashboard_quality_popularity_overview.png)
+
+
 Page 4 — Reviews & Sentiment: Category-wise review totals, detailed category table, sentiment distribution (positive/negative/neutral)
+![Sentiment Analysis](./dashboard_sentiment_overview.png)
+
+
 
 Results:
 
